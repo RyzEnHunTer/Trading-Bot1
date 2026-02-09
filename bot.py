@@ -53,16 +53,22 @@ try:
         from pyquotex.stable_api import Quotex
         from pyquotex.utils.processor import get_color
         print(f"{Fore.GREEN}INFO: Successfully imported pyquotex.")
-    except ImportError:
-        from quotexapi.stable_api import Quotex
-        from quotexapi.utils.processor import get_color
-        print(f"{Fore.GREEN}INFO: Successfully imported quotexapi.")
-except ImportError:
-    print(f"{Fore.RED}Error: pyquotex or quotexapi library not found or import failed.")
-    print(f"{Fore.YELLOW}Please ensure the library is installed via requirements.txt or pip.")
-    sys.exit(1)
+    except ImportError as e1:
+        try:
+            from quotexapi.stable_api import Quotex
+            from quotexapi.utils.processor import get_color
+            print(f"{Fore.GREEN}INFO: Successfully imported quotexapi.")
+        except ImportError as e2:
+            print(f"{Fore.RED}Error: pyquotex or quotexapi library not found or import failed.")
+            print(f"{Fore.YELLOW}Error 1 (pyquotex): {e1}")
+            print(f"{Fore.YELLOW}Error 2 (quotexapi): {e2}")
+            import traceback
+            traceback.print_exc()
+            sys.exit(1)
 except Exception as e:
     print(f"{Fore.RED}Error during pyquotex import or patching setup: {e}")
+    import traceback
+    traceback.print_exc()
     sys.exit(1)
 
 # --- Flask Server for Deployment (Render Keep-Alive) ---
