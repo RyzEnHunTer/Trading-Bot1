@@ -47,21 +47,42 @@ except ImportError:
     Fore = DummyStyle()
     Style = DummyStyle()
 
-# --- pyquotex Imports ---
+# --- pyquotex Imports (Robust) ---
 try:
-    from pyquotex.stable_api import Quotex
-    from pyquotex.utils.processor import get_color # Optional
-    # Monkey patch target detection function (safer approach)
-    # --- Inside your script, replace the existing function ---
-    
+    try:
+        from pyquotex.stable_api import Quotex
+        from pyquotex.utils.processor import get_color
+        print(f"{Fore.GREEN}INFO: Successfully imported pyquotex.")
+    except ImportError:
+        from quotexapi.stable_api import Quotex
+        from quotexapi.utils.processor import get_color
+        print(f"{Fore.GREEN}INFO: Successfully imported quotexapi.")
 except ImportError:
-    print(f"{Fore.RED}Error: pyquotex library not found or import failed.")
-    print(f"{Fore.YELLOW}Please install it via pip:")
-    print(f"{Fore.CYAN}pip install git+https://github.com/cleitonleonel/pyquotex.git")
+    print(f"{Fore.RED}Error: pyquotex or quotexapi library not found or import failed.")
+    print(f"{Fore.YELLOW}Please ensure the library is installed via requirements.txt or pip.")
     sys.exit(1)
 except Exception as e:
     print(f"{Fore.RED}Error during pyquotex import or patching setup: {e}")
     sys.exit(1)
+
+# --- Flask Server for Deployment (Render Keep-Alive) ---
+def run_keep_alive():
+    try:
+        from flask import Flask
+        app = Flask(__name__)
+        @app.route('/')
+        def home():
+            return "Bot is running!"
+        
+        # Render provides PORT environment variable
+        port = int(os.environ.get("PORT", 5000))
+        app.run(host='0.0.0.0', port=port)
+    except Exception as e:
+        print(f"Flask keep-alive error: {e}")
+
+import threading
+keep_alive_thread = threading.Thread(target=run_keep_alive, daemon=True)
+keep_alive_thread.start()
 
 # --- Configuration (Load from environment variables or a config file) ---
 # It's better practice to load these from environment or a separate config.py
