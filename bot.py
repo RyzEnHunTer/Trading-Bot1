@@ -150,8 +150,21 @@ COOLDOWN_MINUTES = 3
 async def setup_database():
     """Initializes MongoDB connection and collections."""
     global db, users_db, quotex_accounts_db, trade_settings_db
+    uri_to_use = MONGO_URI
     try:
-        client = motor.motor_asyncio.AsyncIOMotorClient(MONGO_URI)
+        # Check if the URI contains a password with special characters that need escaping
+        if "://" in MONGO_URI and "@" in MONGO_URI:
+            from urllib.parse import quote_plus
+            prefix, rest = MONGO_URI.split("://", 1)
+            userinfo, hostinfo = rest.rsplit("@", 1)
+            if ":" in userinfo:
+                user, passwd = userinfo.split(":", 1)
+                # Only escape if not already escaped (crude check)
+                if "%" not in passwd:
+                    escaped_passwd = quote_plus(passwd)
+                    uri_to_use = f"{prefix}://{user}:{escaped_passwd}@{hostinfo}"
+        
+        client = motor.motor_asyncio.AsyncIOMotorClient(uri_to_use)
         db = client['quotexTraderBot'] # Database name
         users_db = db['users']
         quotex_accounts_db = db['quotex_accounts']
